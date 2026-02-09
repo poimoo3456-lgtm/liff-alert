@@ -1,29 +1,42 @@
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>แจ้งเหตุ</title>
-<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-</head>
-<body>
-<h2>🚨 แจ้งเหตุฉุกเฉิน</h2>
-<button id="btn">แจ้งเหตุ</button>
+const express = require("express");
+const axios = require("axios");
+const bodyParser = require("body-parser");
 
-<script>
-document.getElementById("btn").onclick = async () => {
-  await liff.init({ liffId: "2009090447-Nq66YDbS" });
+const app = express();
+app.use(bodyParser.urlencoded({ extended: true }));
 
-  if (!liff.isLoggedIn()) {
-    liff.login();
-    return;
-  }
+const LINE_TOKEN = "QW/icGO7rhj1Cj9SNmXR3p7s5nkMAF96mPQysowHI8IP82GIJGwsYFAb7MLSOYnGh5MnVH3kfsRnwGNTGYsGusYqXyflSiTGZNLvp5ZgJRA+2uOkfgqBAZQEmoxSmU9C9vVNimHrd5cv06hFqx4OxgdB04t89/1O/w1cDnyilFU=";
+const GROUP_ID = "Cc837fbbf35a2236b9e441373f7639958
+";
 
-  await liff.sendMessages([
-    { type: "text", text: "🚨 มีการแจ้งเหตุจาก QR Code" }
-  ]);
+app.post("/report", async (req, res) => {
+  const { type, detail, place, name } = req.body;
 
-  alert("ส่งแจ้งเตือนแล้ว");
-};
-</script>
-</body>
-</html>
+  const message = `
+🚨 แจ้งเหตุ / ของหายในโรงเรียน
+📌 ประเภท: ${type}
+🧾 รายละเอียด: ${detail}
+📍 สถานที่: ${place}
+👤 ผู้แจ้ง: ${name}
+  `;
+
+  await axios.post(
+    "https://api.line.me/v2/bot/message/push",
+    {
+      to: GROUP_ID,
+      messages: [{ type: "text", text: message }]
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${LINE_TOKEN}`,
+        "Content-Type": "application/json"
+      }
+    }
+  );
+
+  res.send("ส่งแจ้งเตือนเข้า LINE แล้ว ✅");
+});
+
+app.listen(3000, () => {
+  console.log("Server running on port 3000");
+});
